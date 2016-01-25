@@ -33,16 +33,17 @@ def process_wav(wavfile):
         os.makedirs(result_dir)
 
     grapher = get_processor('waveform_simple')()
-    analyzer_aubio_temporal = get_processor('aubio_temporal')()
-    analyzer_aubio_mfcc = get_processor('aubio_mfcc')()
+    analyzer = get_processor('aubio_temporal')()
     encoder = get_processor('mp3_encoder')(os.path.join(result_dir, 'encoded.mp3'))
 
-    pipe = decoder | grapher | analyzer_aubio_temporal | analyzer_aubio_mfcc | encoder
+    pipe = decoder | grapher | analyzer | encoder
     pipe.run(samplerate=44100)
     grapher.render(os.path.join(result_dir, 'waveform_simple.png'))
-    for res_uuid, result in pipe.results.items():
-        result_path = os.path.join(result_dir, res_uuid + '.yaml')
-        result.to_yaml(result_path)
+    bpm_data_object = analyzer.results['aubio_temporal.bpm']['data_object']
+    # numpy arrays with bpm related info
+    bpm_value = bpm_data_object['value']
+    bpm_time = bpm_data_object['time']
+    bpm_duration = bpm_data_object['duration']
 
 
 if __name__ == "__main__":
